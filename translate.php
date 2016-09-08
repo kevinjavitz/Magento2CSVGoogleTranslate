@@ -17,6 +17,7 @@ $service = new Google_Service_Translate($client);
  * Get list of languages we can translate to
  */
 $sourceLanguage = 'en';
+$filewritesuccess = '';
 $langavailable = $service->languages;
 $languages = $langavailable->listLanguages(['target' => $sourceLanguage]);
 $languagesArray = $languages['data']['languages'];
@@ -66,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $fileText = '';
     for ($i = 0; $i < $len; $i++) {
         // format is 'text to translate','translated text'
-        $fileText .= '\'' . $textToTranslateArray[$i] . '\',\'' . $translatedTextArray[$i]['translatedText'] . '\'' . PHP_EOL;
+        $fileText .= '"' . $textToTranslateArray[$i] . '","' . $translatedTextArray[$i]['translatedText'] . '"' . PHP_EOL;
     }
     $newfile = fopen($file_name, 'w') or die("Unable to open file!");
     if (fwrite($newfile, $fileText)){
@@ -86,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="page-header">
         <h1>Magento Language CSV Translator</h1>
     </div>
-    <?php if($filewritesuccess){
+    <?php if($filewritesuccess != ''){
       ?><div class="alert alert-success" role="alert"><?php echo $filewritesuccess; ?></div>
     <?php
     }
