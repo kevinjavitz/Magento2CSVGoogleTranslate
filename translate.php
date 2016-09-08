@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <link href="vendor/twbs/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 <div class="container">
     <div class="page-header">
-        <h1>Magento Language CSV Translator</h1>
+        <h1>Magento 2 Language File CSV Translator</h1>
     </div>
     <?php if($filewritesuccess != ''){
       ?><div class="alert alert-success" role="alert"><?php echo $filewritesuccess; ?></div>
