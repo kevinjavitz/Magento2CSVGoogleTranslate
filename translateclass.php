@@ -18,6 +18,7 @@ class Translateclass {
         'de'    =>  'de_DE',
         'el'    =>  'el_GR',
         'es'    =>  'es_ES',
+        'et'    =>  'et_EE',
         'fr'    =>  'fr_FR',
         'hr'    =>  'hr_HR',
         'id'    =>  'id_ID',
