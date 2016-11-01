@@ -12,7 +12,7 @@ $client->setApplicationName("Client_Library_Examples");
 // Set your developer key here, make sure it is enabled for domain you are using this from
 // and Google Translate API
 // https://console.developers.google.com
-$client->setDeveloperKey("AIzaSyBhtT1NQMUXBiBYbTms__QDALfubnLDPvA");
+$client->setDeveloperKey("");
 $service = new Google_Service_Translate($client);
 
 /**
