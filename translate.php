@@ -1,16 +1,18 @@
 <?php
 
 require('vendor/autoload.php');
+use League\Csv\Reader;
 
 /**
  * Load Google API Instance
  */
 $client = new Google_Client();
+
 $client->setApplicationName("Client_Library_Examples");
 // Set your developer key here, make sure it is enabled for domain you are using this from
 // and Google Translate API
 // https://console.developers.google.com
-$client->setDeveloperKey("");
+$client->setDeveloperKey("AIzaSyBhtT1NQMUXBiBYbTms__QDALfubnLDPvA");
 $service = new Google_Service_Translate($client);
 
 /**
@@ -21,6 +23,7 @@ $filewritesuccess = '';
 $langavailable = $service->languages;
 $languages = $langavailable->listLanguages(['target' => $sourceLanguage]);
 $languagesArray = $languages['data']['languages'];
+$linesToProcess = 50; // how many lines of the csv to process in one translation request. Google limits to 2000 chars.
 
 /**
  * Process form if submitted
@@ -47,27 +50,50 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $handle = fopen($filetmp, 'r');
     $translateArray = [];
-    while (($data = fgetcsv($handle)) !== false) {
-        $textToTranslateArray[] = $data[0];
+    $reader = Reader::createFromPath($filetmp);
+    $reader = $reader->fetchAll();
+    $curRow = 0;
+    $totalRows = (int)count($reader);
+    $textToTranslateArray = [];
+    $originalCSVLanguageArray = [];
+    $translatedTextArray = [];
+
+    function processTranslations($service, $textToTranslateArray, $sourceLanguage){
+        $translations = $service->translations;
+        $destinationLanguage = $_POST['language'];
+        $translated = $translations->listTranslations($textToTranslateArray, $destinationLanguage, ['source' => $sourceLanguage]);
+        return $translated['data']['translations'];
     }
 
-    $translations = $service->translations;
+    for($curRow;$curRow<$totalRows;$curRow++) {
+        $textToTranslateArray[] = $reader[$curRow][0];
+        $originalCSVLanguageArray[] = $reader[$curRow][0];
+        if(($curRow != 0 && (($curRow % $linesToProcess) == 0)) || // if we are in a multiple of lines to process
+            (($curRow + 1) == $totalRows)){ //
+            $translationsArray = processTranslations($service, $textToTranslateArray, $sourceLanguage);
+            $translatedTextArray = array_merge($translatedTextArray, $translationsArray);
+            $textToTranslateArray = []; // reset
+        }
+//        while (($data = fgetcsv($handle)) !== false) {
+//            $textToTranslateArray[] = $data[0];
+//        }
+    }
+
+
 
     // debug translate Array
     // $translateArray = ['hello how are you', 'i have a dog'];
 
-    $destinationLanguage = $_POST['language'];
-    $translated = $translations->listTranslations($textToTranslateArray, $destinationLanguage, ['source' => $sourceLanguage]);
-    $translatedTextArray = $translated['data']['translations'];
+
 
     /**
      * Re-Assemble CSV file from the translations
      */
-    $len = count($textToTranslateArray);
+    $len = count($translatedTextArray);
     $fileText = '';
     for ($i = 0; $i < $len; $i++) {
         // format is 'text to translate','translated text'
-        $fileText .= '"' . $textToTranslateArray[$i] . '","' . $translatedTextArray[$i]['translatedText'] . '"' . PHP_EOL;
+        $fileText .= '"' . $originalCSVLanguageArray[$i] . '","' . $translatedTextArray[$i]['translatedText'] . '"' . PHP_EOL;
     }
     $newfile = fopen($file_name, 'w') or die("Unable to open file!");
     if (fwrite($newfile, $fileText)){
