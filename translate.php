@@ -54,6 +54,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 //var_dump($translated);
 ?>
 <html>
+<head>
+    <title>Magento 2 i18n Module CSV Google Translate App</title>
+</head>
 <body>
 <link href="vendor/twbs/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet">
 <link href="vendor/twbs/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">

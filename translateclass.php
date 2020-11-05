@@ -76,7 +76,17 @@ class Translateclass {
             }
             if(($curRow != 0 && (($curRow % $this->linesToProcess) == 0)) || // if we are in a multiple of lines to process
                 (($curRow + 1) == $totalRows)){ //
-                $translationsArray = $this->client->translateBatch($textToTranslateArray, ['source' => $this->sourcelanguage, 'target' => $destinationLanguage ]);
+                $translationsArray = $this->client->translateBatch($textToTranslateArray,
+                    ['format' => 'text', 'source' => $this->sourcelanguage, 'target' => $destinationLanguage ]);
+                // Google translate changes %1 to (space)% 1 which messes up variable replacement, needs to stay %1
+                foreach($translationsArray as $key => $value){
+                    $translationsArray[$key]['text'] = str_ireplace('% 1', ' %1', $translationsArray[$key]['text']);
+                    $translationsArray[$key]['text'] = str_ireplace('% 2', ' %2', $translationsArray[$key]['text']);
+                    $translationsArray[$key]['text'] = str_ireplace('% 3', ' %3', $translationsArray[$key]['text']);
+                    $translationsArray[$key]['text'] = str_ireplace('" %1"', '"%1"', $translationsArray[$key]['text']);
+                    $translationsArray[$key]['text'] = str_ireplace('" %2"', '"%2"', $translationsArray[$key]['text']);
+                    $translationsArray[$key]['text'] = str_ireplace('" %3"', '"%3"', $translationsArray[$key]['text']);
+                }
                 $translatedTextArray = array_merge($translatedTextArray, $translationsArray);
                 $textToTranslateArray = []; // reset
             }
