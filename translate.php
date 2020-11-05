@@ -3,7 +3,6 @@
 require('vendor/autoload.php');
 require('translateclass.php');
 require('env.php');
-$devkey = 'AIzaSyAwVUbp5V9wMshjvLE7znoWRd-Mo1Br3vM';
 use League\Csv\Reader;
 
 $translater = new Translateclass($devkey);
