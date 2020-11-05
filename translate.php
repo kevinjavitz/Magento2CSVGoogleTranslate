@@ -2,10 +2,13 @@
 
 require('vendor/autoload.php');
 require('translateclass.php');
+require('env.php');
+$devkey = 'AIzaSyAwVUbp5V9wMshjvLE7znoWRd-Mo1Br3vM';
 use League\Csv\Reader;
 
-$translater = new Translateclass();
-$languagesArray = $translater->getLanguagesAvailable();
+$translater = new Translateclass($devkey);
+$languagesArray = $translater->client->localizedLanguages();
+$languageserror = false;
 
 /**
  * Process form if submitted
@@ -37,10 +40,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
      * Go through each language and generate the CSV language files
      */
 
-    foreach($_POST['language'] as $language){
-        $translatedTextArray = $translater->processTranslationByRow($reader, $language);
-        $languageCode = $translater->getMageLanguageCode($language);
-        $translater->generateCSV($translatedTextArray, $languageCode);
+    if(isset($_POST['language'])){
+        foreach($_POST['language'] as $language){
+            $translatedTextArray = $translater->processTranslationByRow($reader, $language);
+            $languageCode = $translater->getMageLanguageCode($language);
+            $translater->generateCSV($translatedTextArray, $languageCode);
+        }
+    } else {
+        $languageserror = true;
     }
 
 }
@@ -60,18 +67,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <?php
     }
     ?>
+    <?php if($languageserror){
+        ?><div class="alert alert-danger" role="alert">Please select at least one language to translate to</div>
+        <?php
+    }
+    ?>
     <form method="post" enctype="multipart/form-data">
         <label for="languages">Translate language file to: </label>
-        <select multiple="multiple" name="language[]" size="15">
+        <select multiple="multiple" name="language[]" size="15" class="form-control">
             <?php
             foreach ($languagesArray as $language) {
-                echo '<option value=' . $language['language'] . '>' . $language['name'] . '</option>';
+                echo '<option value=' . $language['code'] . '>' . $language['name'] . '</option>';
             }
             ?>
         </select><br/>
         <label for="magelangfile">Magento language CSV file</label>
-        <input type="file" name="magelangfile"><br/>
-        <input type="submit">
+        <input type="file" name="magelangfile" class="form-control-file"><br/>
+        <input type="submit" class="btn btn-primary">
     </form>
 </div>
 </body>

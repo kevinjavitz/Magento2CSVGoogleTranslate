@@ -1,6 +1,6 @@
 {
   "require": {
-    "google/apiclient": "1.0.*@beta",
+    "google/cloud-translate": "1.9.1",
     "twbs/bootstrap": "~3.3.7",
     "league/csv": "^8.1"
   }

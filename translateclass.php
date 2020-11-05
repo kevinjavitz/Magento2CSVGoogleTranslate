@@ -1,6 +1,6 @@
 <?php
 require('vendor/autoload.php');
-use League\Csv\Reader;
+
 
 class Translateclass {
 
@@ -57,27 +57,11 @@ class Translateclass {
     /**
      * Load Google API Instance
      */
-    public function __construct()
+    public function __construct($devkey)
     {
-        $this->client = new Google_Client();
-        $this->client->setApplicationName("Client_Library_Examples");
-        // Set your developer key here, make sure it is enabled for domain you are using this from
-        // and Google Translate API
-        // https://console.developers.google.com
-        $this->client->setDeveloperKey("");
-        $this->service = new Google_Service_Translate($this->client);
+        $this->client = new Google\Cloud\Translate\V2\TranslateClient(['key'=>$devkey]);
     }
 
-    /**
-     * Gets languages available and returns them as an array
-     *
-     * @return mixed
-     */
-    public function getLanguagesAvailable(){
-        $langavailable = $this->service->languages;
-        $languages = $langavailable->listLanguages(['target' => $this->sourcelanguage]);
-        return $languages['data']['languages'];
-    }
 
     public function processTranslationByRow($reader, $destinationLanguage){
         $totalRows = (int)count($reader);
@@ -92,7 +76,7 @@ class Translateclass {
             }
             if(($curRow != 0 && (($curRow % $this->linesToProcess) == 0)) || // if we are in a multiple of lines to process
                 (($curRow + 1) == $totalRows)){ //
-                $translationsArray = $this->processTranslations($textToTranslateArray, $destinationLanguage);
+                $translationsArray = $this->client->translateBatch($textToTranslateArray, ['source' => $this->sourcelanguage, 'target' => $destinationLanguage ]);
                 $translatedTextArray = array_merge($translatedTextArray, $translationsArray);
                 $textToTranslateArray = []; // reset
             }
@@ -100,18 +84,6 @@ class Translateclass {
         return $translatedTextArray;
     }
 
-    /**
-     * Takes a source array and translates to the destination language
-     *
-     * @param $textToTranslateArray
-     * @param $sourceLanguage
-     * @return mixed
-     */
-    public function processTranslations($textToTranslateArray, $destinationLanguage){
-        $translations = $this->service->translations;
-        $translated = $translations->listTranslations($textToTranslateArray, $destinationLanguage, ['source' => $this->sourcelanguage]);
-        return $translated['data']['translations'];
-    }
 
     /**
      * Searches languages array and returns the Mage language code
@@ -138,7 +110,7 @@ class Translateclass {
         $file_name = $languageCode . '.csv';
         for ($i = 0; $i < $len; $i++) {
             // format is 'text to translate','translated text'
-            $fileText .= '"' . $this->originalCSVLanguageArray[$i] . '","' . $translatedTextArray[$i]['translatedText'] . '"' . PHP_EOL;
+            $fileText .= '"' . $this->originalCSVLanguageArray[$i] . '","' . $translatedTextArray[$i]['text'] . '"' . PHP_EOL;
         }
         $newfile = fopen($this->i18ndir . DIRECTORY_SEPARATOR . $file_name, 'w') or die("Unable to open file!");
         if (fwrite($newfile, $fileText)) {
